@@ -14,10 +14,7 @@ import 'package:volleystats/features/matches/widgets/live_results_table.dart';
 class MatchScreen extends ConsumerStatefulWidget {
   final String matchId;
 
-  const MatchScreen({
-    super.key,
-    required this.matchId,
-  });
+  const MatchScreen({super.key, required this.matchId});
 
   @override
   ConsumerState<MatchScreen> createState() => _MatchScreenState();
@@ -49,7 +46,11 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
 
     final players = ref.read(playersProvider);
     final availableCommands = ref.read(commandsProvider);
-    final parseResult = CommandParser.parseCommand(input, players, availableCommands);
+    final parseResult = CommandParser.parseCommand(
+      input,
+      players,
+      availableCommands,
+    );
 
     if (parseResult.success &&
         parseResult.player != null &&
@@ -120,42 +121,72 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
     );
   }
 
+  void _pauseMatch() {
+    context.pop();
+  }
+
+  void _goBack() {
+    context.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final availableCommands = ref.watch(commandsProvider);
+    final matches = ref.watch(matchesProvider);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(
-                  color: theme.dividerColor,
-                  width: 1,
-                ),
-              ),
+    final match = matches.firstWhere(
+      (m) => m.id == widget.matchId,
+      orElse: () => throw StateError('Match not found'),
+    );
+
+    final isActive = match.isActive;
+    final isFinished = match.isFinished;
+
+    final content = Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(color: theme.dividerColor, width: 1),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.sports_volleyball,
-                  size: 32,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Match',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.sports_volleyball,
+                size: 32,
+                color: theme.colorScheme.primaryContainer,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  match.name,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
+              if (isActive) ...[
+                // Pause button for active match
+                ElevatedButton.icon(
+                  onPressed: _pauseMatch,
+                  icon: const Icon(Icons.pause_circle),
+                  label: const Text('Pause'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    backgroundColor: colors.primaryContainer,
+                    foregroundColor: colors.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 ElevatedButton.icon(
                   onPressed: _endMatch,
                   icon: const Icon(Icons.stop_circle),
@@ -169,84 +200,86 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                     foregroundColor: colors.onError,
                   ),
                 ),
-              ],
-            ),
-          ),
-          // Main content area
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Left side: Live results table
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Live Results',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: LiveResultsTable(matchId: widget.matchId),
-                        ),
-                      ],
+              ] else if (isFinished) ...[
+                // Back button for finished match
+                ElevatedButton.icon(
+                  onPressed: _goBack,
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Back'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
                     ),
+                    backgroundColor: colors.primaryContainer,
+                    foregroundColor: colors.onPrimaryContainer,
                   ),
                 ),
-                // Divider
-                Container(
-                  width: 1,
-                  color: theme.dividerColor,
-                ),
-                // Right side: Recent commands
-                Expanded(
-                  flex: 2,
+              ],
+            ],
+          ),
+        ),
+        // Main content area
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left side: Live results table
+              Expanded(
+                flex: 3,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          border: Border(
-                            bottom: BorderSide(
-                              color: theme.dividerColor,
-                              width: 1,
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          'Recent Commands',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      Text(
+                        'Live Results',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: colors.onSurface,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(height: 16),
                       Expanded(
-                        child: MatchStatList(matchId: widget.matchId),
+                        child: LiveResultsTable(matchId: widget.matchId),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+
+              Container(width: 1, color: theme.dividerColor),
+
+              Expanded(
+                flex: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'Recent Commands',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colors.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: MatchStatList(matchId: widget.matchId)),
+                  ],
+                ),
+              ),
+            ],
           ),
-          // Command input field at bottom
+        ),
+        // Command input field at bottom (only show if match is active)
+        if (isActive)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               border: Border(
-                top: BorderSide(
-                  color: theme.dividerColor,
-                  width: 1,
-                ),
+                top: BorderSide(color: theme.dividerColor, width: 1),
               ),
             ),
             child: Column(
@@ -283,8 +316,10 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                       child: TextField(
                         controller: _commandController,
                         focusNode: _focusNode,
+                        style: TextStyle(color: colors.onSurface),
                         decoration: InputDecoration(
-                          hintText: 'Enter command (e.g., "1 serve +" or "John dig +-")',
+                          hintText:
+                              'Enter command (e.g., "1 serve +" or "John dig +-")',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -295,7 +330,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                         textInputAction: TextInputAction.send,
                         onSubmitted: (_) => _submitCommand(),
                         inputFormatters: [
-                          FilteringTextInputFormatter.deny(RegExp(r'[^\w\s\+\-\d]')),
+                          FilteringTextInputFormatter.deny(
+                            RegExp(r'[^\w\s\+\-\d]'),
+                          ),
                         ],
                       ),
                     ),
@@ -309,8 +346,8 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                           horizontal: 24,
                           vertical: 16,
                         ),
-                        backgroundColor: colors.primary,
-                        foregroundColor: colors.onPrimary,
+                        backgroundColor: colors.primaryContainer,
+                        foregroundColor: colors.onPrimaryContainer,
                       ),
                     ),
                   ],
@@ -318,9 +355,9 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               ],
             ),
           ),
-        ],
-      ),
+      ],
     );
+
+    return Scaffold(body: content);
   }
 }
-

@@ -96,14 +96,14 @@ class MatchStatList extends ConsumerWidget {
               vertical: 8,
             ),
             leading: CircleAvatar(
-              backgroundColor: colors.primary,
+              backgroundColor: colors.primaryContainer,
               child: Text(
                 player?.number?.toString() ??
                     (player != null
                         ? player.name[0].toUpperCase()
                         : '?'),
                 style: TextStyle(
-                  color: colors.onPrimary,
+                  color: colors.onPrimaryContainer,
                   fontWeight: FontWeight.bold,
                 ),
               ),

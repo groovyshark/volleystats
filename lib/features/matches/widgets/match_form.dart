@@ -82,6 +82,7 @@ class _MatchFormState extends ConsumerState<MatchForm> {
           children: [
             TextFormField(
               controller: _nameController,
+              style: TextStyle(color: colors.onSurface),
               decoration: const InputDecoration(
                 labelText: 'Match Name *',
                 hintText: 'Enter match name',
@@ -201,8 +202,8 @@ class _MatchFormState extends ConsumerState<MatchForm> {
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: colors.primary,
-                foregroundColor: colors.onPrimary,
+                backgroundColor: colors.primaryContainer,
+                foregroundColor: colors.onPrimaryContainer,
               ),
               child: const Text(
                 'Create Match',
@@ -215,4 +216,3 @@ class _MatchFormState extends ConsumerState<MatchForm> {
     );
   }
 }
-

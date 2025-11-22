@@ -13,6 +13,9 @@ dependencies:
   go_router: ^17.0.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  data_table_2: ^2.5.15
+  window_manager: ^0.5.1
+  google_fonts: ^6.3.2
 
 dev_dependencies:
   flutter_test:

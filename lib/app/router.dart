@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:volleystats/core/widgets/app_layout.dart';
+import 'package:volleystats/features/matches/providers/matches_provider.dart';
 import 'package:volleystats/features/players/screens/players_screen.dart';
 import 'package:volleystats/features/teams/screens/teams_screen.dart';
 import 'package:volleystats/features/commands/screens/commands_screen.dart';
@@ -34,9 +35,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/match/:id',
-        builder: (_, state) => AppLayout(
-          child: MatchScreen(matchId: state.pathParameters['id']!),
-        ),
+        builder: (_, state) {
+          final matchId = state.pathParameters['id']!;
+          final isMatchFinished = ref.watch(isMatchFinishedProvider(matchId));
+
+          return AppLayout(showSidebar: isMatchFinished, child: MatchScreen(matchId: matchId));
+        },
       ),
     ],
   );

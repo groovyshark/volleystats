@@ -20,14 +20,15 @@ class CommandAdapter extends TypeAdapter<Command> {
       id: fields[0] as String,
       name: fields[1] as String,
       description: fields[2] as String,
-      createdAt: fields[3] as DateTime,
+      shortcut: fields[3] as String,
+      createdAt: fields[4] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, Command obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -35,6 +36,8 @@ class CommandAdapter extends TypeAdapter<Command> {
       ..writeByte(2)
       ..write(obj.description)
       ..writeByte(3)
+      ..write(obj.shortcut)
+      ..writeByte(4)
       ..write(obj.createdAt);
   }
 

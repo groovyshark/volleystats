@@ -81,14 +81,14 @@ class TeamPlayerSelector extends ConsumerWidget {
                         Icon(
                           Icons.sports_volleyball,
                           size: 18,
-                          color: colors.primary,
+                          color: colors.primaryContainer,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           entry.key,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: colors.primary,
+                            color: colors.primaryContainer,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -125,6 +125,8 @@ class TeamPlayerSelector extends ConsumerWidget {
                           ),
                           onDeleted: () {
                             ref.read(teamsProvider.notifier).removePlayerFromTeam(currentTeam.id, player.id);
+
+                            ScaffoldMessenger.of(context).clearSnackBars();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 backgroundColor: colors.error,
@@ -203,9 +205,11 @@ class TeamPlayerSelector extends ConsumerWidget {
                           onSelected: (selected) {
                             if (selected) {
                               ref.read(teamsProvider.notifier).addPlayerToTeam(currentTeam.id, player.id);
+
+                              ScaffoldMessenger.of(context).clearSnackBars();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  backgroundColor: colors.primary,
+                                  backgroundColor: colors.primaryContainer,
                                   content: Text('${player.name} added to team'),
                                   duration: const Duration(seconds: 1),
                                 ),

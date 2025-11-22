@@ -15,7 +15,7 @@ class CommandParser {
     }
 
     final parts = input.trim().split(RegExp(r'\s+'));
-    
+
     if (parts.length < 2) {
       return CommandParseResult(
         success: false,
@@ -27,24 +27,36 @@ class CommandParser {
     final action = parts[1].toLowerCase();
     final result = parts.length > 2 ? parts[2] : '+';
 
-    // Validate action against available commands
-    final validActions = availableCommands.map((c) => c.name).toList();
-    if (!validActions.contains(action)) {
+    // Validate action against available commands (by name or shortcut)
+    final matchingCommand = availableCommands.firstWhere(
+      (c) =>
+          c.name == action || (c.shortcut.isNotEmpty && c.shortcut == action),
+      orElse: () => Command(id: '', name: '', createdAt: DateTime.now()),
+    );
+
+    if (matchingCommand.id.isEmpty) {
+      final validActions = availableCommands
+          .map(
+            (c) => c.shortcut.isNotEmpty ? '${c.name} (${c.shortcut})' : c.name,
+          )
+          .toList();
       return CommandParseResult(
         success: false,
-        error: 'Invalid action: $action. Valid actions: ${validActions.join(", ")}',
+        error:
+            'Invalid action: $action. Valid actions: ${validActions.join(", ")}',
       );
     }
+
+    // Use the full command name for consistency
+    final normalizedAction = matchingCommand.name;
 
     // Try to find player by jersey number or name
     Player? player;
     final jerseyNumber = int.tryParse(playerIdentifier);
-    
+
     try {
       if (jerseyNumber != null) {
-        player = players.firstWhere(
-          (p) => p.number == jerseyNumber,
-        );
+        player = players.firstWhere((p) => p.number == jerseyNumber);
       } else {
         player = players.firstWhere(
           (p) => p.name.toLowerCase() == playerIdentifier.toLowerCase(),
@@ -60,7 +72,7 @@ class CommandParser {
     return CommandParseResult(
       success: true,
       playerIdentifier: playerIdentifier,
-      action: action,
+      action: normalizedAction,
       result: result,
       player: player,
       rawCommand: input.trim(),
@@ -87,4 +99,3 @@ class CommandParseResult {
     this.rawCommand,
   });
 }
-

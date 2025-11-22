@@ -38,7 +38,7 @@ class _TeamFormState extends ConsumerState<TeamForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           content: Text('Team created successfully'),
           duration: Duration(seconds: 1),
         ),
@@ -81,8 +81,8 @@ class _TeamFormState extends ConsumerState<TeamForm> {
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: colors.primary,
-                foregroundColor: colors.onPrimary,
+                backgroundColor: colors.primaryContainer,
+                foregroundColor: colors.onPrimaryContainer,
               ),
               child: const Text(
                 'Create Team',

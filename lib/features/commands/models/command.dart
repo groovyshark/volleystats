@@ -14,12 +14,16 @@ class Command extends HiveObject {
   final String description; // Optional description
 
   @HiveField(3)
+  final String shortcut; // Shortcut for quick command entry, e.g., "s", "d", "h"
+
+  @HiveField(4)
   final DateTime createdAt;
 
   Command({
     required this.id,
     required this.name,
     this.description = '',
+    this.shortcut = '',
     required this.createdAt,
   });
 
@@ -27,12 +31,14 @@ class Command extends HiveObject {
     String? id,
     String? name,
     String? description,
+    String? shortcut,
     DateTime? createdAt,
   }) {
     return Command(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      shortcut: shortcut ?? this.shortcut,
       createdAt: createdAt ?? this.createdAt,
     );
   }

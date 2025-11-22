@@ -82,3 +82,8 @@ final matchesProvider = NotifierProvider<MatchesNotifier, List<Match>>(
   MatchesNotifier.new,
 );
 
+final isMatchFinishedProvider = Provider.family<bool, String>((ref, id) {
+  final matches = ref.watch(matchesProvider);
+  final match = matches.firstWhere((m) => m.id == id);
+  return match.isFinished;
+});

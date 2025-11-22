@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 import 'package:volleystats/features/matches/providers/match_stats_provider.dart';
 import 'package:volleystats/features/players/providers/players_provider.dart';
 import 'package:volleystats/features/players/models/player.dart';
@@ -10,10 +11,7 @@ import 'package:volleystats/features/teams/providers/teams_provider.dart';
 class LiveResultsTable extends ConsumerWidget {
   final String matchId;
 
-  const LiveResultsTable({
-    super.key,
-    required this.matchId,
-  });
+  const LiveResultsTable({super.key, required this.matchId});
 
   Map<String, Map<String, int>> _calculateStats(
     List<dynamic> stats,
@@ -81,7 +79,9 @@ class LiveResultsTable extends ConsumerWidget {
       }
     }
 
-    final matchPlayers = players.where((p) => matchPlayerIds.contains(p.id)).toList();
+    final matchPlayers = players
+        .where((p) => matchPlayerIds.contains(p.id))
+        .toList();
 
     // If no players, show all players (for stats that might have been recorded)
     final displayPlayers = matchPlayers.isEmpty ? players : matchPlayers;
@@ -115,93 +115,111 @@ class LiveResultsTable extends ConsumerWidget {
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SingleChildScrollView(
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(colors.surfaceContainerHighest),
-          columns: [
-            const DataColumn(
-              label: Text(
-                'Player',
-                style: TextStyle(fontWeight: FontWeight.bold),
+    return DataTable2(
+      headingRowColor: WidgetStateProperty.all(colors.surfaceContainerHighest),
+      columnSpacing: 12,
+      horizontalMargin: 12,
+      minWidth: 600,
+      columns: [
+        DataColumn2(
+          label: Text(
+            'Player',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface,
+            ),
+          ),
+          size: ColumnSize.L,
+        ),
+        ...sortedActions.map((action) {
+          return DataColumn2(
+            label: Text(
+              action.toUpperCase(),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: colors.onSurface,
+              ),
+            ),
+            size: ColumnSize.S,
+          );
+        }),
+        DataColumn2(
+          label: Text(
+            'Total',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface,
+            ),
+          ),
+          size: ColumnSize.S,
+        ),
+      ],
+      rows: displayPlayers.map((player) {
+        final stats = playerStats[player.id] ?? {};
+        final rowData = <String, int>{};
+        int total = 0;
+
+        for (final action in sortedActions) {
+          final count = stats[action] ?? 0;
+          rowData[action] = count;
+          total += count;
+        }
+
+        return DataRow2(
+          cells: [
+            DataCell(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: colors.primaryContainer,
+                    child: Text(
+                      player.number?.toString() ?? player.name[0].toUpperCase(),
+                      style: TextStyle(
+                        color: colors.onPrimaryContainer,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    player.name,
+                    style: TextStyle(color: colors.onSurface, fontSize: 16),
+                  ),
+                ],
               ),
             ),
             ...sortedActions.map((action) {
-              return DataColumn(
-                label: Text(
-                  action.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              final count = rowData[action] ?? 0;
+              return DataCell(
+                Text(
+                  count.toString(),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
+                    color: count > 0
+                        ? colors.secondary
+                        : colors.onSurface.withValues(alpha: 0.5),
+                  ),
                 ),
               );
             }),
-            const DataColumn(
-              label: Text(
-                'Total',
-                style: TextStyle(fontWeight: FontWeight.bold),
+            DataCell(
+              Text(
+                total.toString(),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: colors.primary,
+                ),
               ),
             ),
           ],
-          rows: displayPlayers.map((player) {
-            final stats = playerStats[player.id] ?? {};
-            final rowData = <String, int>{};
-            int total = 0;
-
-            for (final action in sortedActions) {
-              final count = stats[action] ?? 0;
-              rowData[action] = count;
-              total += count;
-            }
-
-            return DataRow(
-              cells: [
-                DataCell(
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: colors.primary,
-                        child: Text(
-                          player.number?.toString() ?? player.name[0].toUpperCase(),
-                          style: TextStyle(
-                            color: colors.onPrimary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(player.name),
-                    ],
-                  ),
-                ),
-                ...sortedActions.map((action) {
-                  final count = rowData[action] ?? 0;
-                  return DataCell(
-                    Text(
-                      count.toString(),
-                      style: TextStyle(
-                        fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
-                        color: count > 0 ? colors.primary : colors.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  );
-                }),
-                DataCell(
-                  Text(
-                    total.toString(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: colors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
+        );
+      }).toList(),
     );
   }
 }
-
