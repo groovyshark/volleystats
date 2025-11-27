@@ -8,10 +8,7 @@ import 'package:volleystats/features/players/models/player.dart';
 class MatchStatList extends ConsumerWidget {
   final String matchId;
 
-  const MatchStatList({
-    super.key,
-    required this.matchId,
-  });
+  const MatchStatList({super.key, required this.matchId});
 
   String _formatTime(DateTime timestamp) {
     final now = DateTime.now();
@@ -99,9 +96,7 @@ class MatchStatList extends ConsumerWidget {
               backgroundColor: colors.primaryContainer,
               child: Text(
                 player?.number?.toString() ??
-                    (player != null
-                        ? player.name[0].toUpperCase()
-                        : '?'),
+                    (player != null ? player.name[0].toUpperCase() : '?'),
                 style: TextStyle(
                   color: colors.onPrimaryContainer,
                   fontWeight: FontWeight.bold,
@@ -112,13 +107,14 @@ class MatchStatList extends ConsumerWidget {
               children: [
                 Text(
                   player?.name ?? 'Unknown',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(4),
@@ -133,21 +129,29 @@ class MatchStatList extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getResultColor(stat.result, colors).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    stat.result,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: _getResultColor(stat.result, colors),
+
+                if (stat.result.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getResultColor(
+                        stat.result,
+                        colors,
+                      ).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      stat.result,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: _getResultColor(stat.result, colors),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             subtitle: Column(
@@ -172,10 +176,7 @@ class MatchStatList extends ConsumerWidget {
               ],
             ),
             trailing: IconButton(
-              icon: Icon(
-                Icons.delete_outline,
-                color: colors.error,
-              ),
+              icon: Icon(Icons.delete_outline, color: colors.error),
               onPressed: () {
                 ref.read(matchStatsProvider.notifier).removeStat(stat.id);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -192,4 +193,3 @@ class MatchStatList extends ConsumerWidget {
     );
   }
 }
-

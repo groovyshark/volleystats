@@ -169,9 +169,17 @@ class MatchList extends ConsumerWidget {
                                       showDialog(
                                         context: context,
                                         builder: (context) => AlertDialog(
-                                          title: const Text('Delete Match'),
+                                          title: Text(
+                                            'Delete Match',
+                                            style: TextStyle(
+                                              color: colors.onSurface,
+                                            ),
+                                          ),
                                           content: Text(
                                             'Are you sure you want to delete "${match.name}"?',
+                                            style: TextStyle(
+                                              color: colors.onSurface,
+                                            ),
                                           ),
                                           actions: [
                                             TextButton(
@@ -191,8 +199,15 @@ class MatchList extends ConsumerWidget {
                                                   context,
                                                 ).showSnackBar(
                                                   SnackBar(
+                                                    backgroundColor:
+                                                        colors.error,
                                                     content: Text(
                                                       'Match "${match.name}" deleted',
+                                                      style: TextStyle(
+                                                        color: colors.onError,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
                                                     ),
                                                     duration: const Duration(
                                                       seconds: 1,

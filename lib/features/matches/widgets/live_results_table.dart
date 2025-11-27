@@ -22,7 +22,7 @@ class LiveResultsTable extends ConsumerWidget {
     for (final stat in stats) {
       final playerId = stat.playerId;
       final action = stat.action;
-      final result = stat.result;
+      final result = stat.result.trim();
 
       if (!playerStats.containsKey(playerId)) {
         playerStats[playerId] = {};
@@ -88,8 +88,13 @@ class LiveResultsTable extends ConsumerWidget {
 
     final playerStats = _calculateStats(stats, displayPlayers);
     final allActions = <String>{};
+    final actionsWithResults = <String>{};
     for (final stat in stats) {
       allActions.add(stat.action);
+      final result = stat.result.trim();
+      if (result.startsWith('+') || result.startsWith('-')) {
+        actionsWithResults.add(stat.action);
+      }
     }
     final sortedActions = allActions.toList()..sort();
 
@@ -132,17 +137,43 @@ class LiveResultsTable extends ConsumerWidget {
           ),
           size: ColumnSize.L,
         ),
-        ...sortedActions.map((action) {
-          return DataColumn2(
-            label: Text(
-              action.toUpperCase(),
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: colors.onSurface,
+        ...sortedActions.expand((action) {
+          if (actionsWithResults.contains(action)) {
+            return [
+              DataColumn2(
+                label: Text(
+                  '${action.toUpperCase()} +',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: colors.onSurface,
+                  ),
+                ),
+                size: ColumnSize.S,
               ),
+              DataColumn2(
+                label: Text(
+                  '${action.toUpperCase()} -',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: colors.onSurface,
+                  ),
+                ),
+                size: ColumnSize.S,
+              ),
+            ];
+          }
+          return [
+            DataColumn2(
+              label: Text(
+                action.toUpperCase(),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: colors.onSurface,
+                ),
+              ),
+              size: ColumnSize.S,
             ),
-            size: ColumnSize.S,
-          );
+          ];
         }),
         DataColumn2(
           label: Text(
@@ -193,20 +224,58 @@ class LiveResultsTable extends ConsumerWidget {
                 ],
               ),
             ),
-            ...sortedActions.map((action) {
+            ...sortedActions.expand((action) {
+              if (actionsWithResults.contains(action)) {
+                final posCount = stats['${action}_positive'] ?? 0;
+                final negCount = stats['${action}_negative'] ?? 0;
+                return [
+                  DataCell(
+                    Text(
+                      posCount.toString(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: posCount > 0
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: posCount > 0
+                            ? Colors.green
+                            : colors.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                  DataCell(
+                    Text(
+                      negCount.toString(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: negCount > 0
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: negCount > 0
+                            ? colors.error
+                            : colors.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                ];
+              }
               final count = rowData[action] ?? 0;
-              return DataCell(
-                Text(
-                  count.toString(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: count > 0 ? FontWeight.bold : FontWeight.normal,
-                    color: count > 0
-                        ? colors.secondary
-                        : colors.onSurface.withValues(alpha: 0.5),
+              return [
+                DataCell(
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: count > 0
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      color: count > 0
+                          ? colors.secondary
+                          : colors.onSurface.withValues(alpha: 0.5),
+                    ),
                   ),
                 ),
-              );
+              ];
             }),
             DataCell(
               Text(

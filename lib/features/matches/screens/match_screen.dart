@@ -8,8 +8,11 @@ import 'package:volleystats/features/matches/providers/matches_provider.dart';
 import 'package:volleystats/features/commands/utils/command_parser.dart';
 import 'package:volleystats/features/commands/providers/commands_provider.dart';
 import 'package:volleystats/features/players/providers/players_provider.dart';
+import 'package:volleystats/features/teams/providers/teams_provider.dart';
 import 'package:volleystats/features/matches/widgets/match_stat_list.dart';
 import 'package:volleystats/features/matches/widgets/live_results_table.dart';
+import 'package:volleystats/features/matches/services/match_export_service.dart';
+import 'package:volleystats/features/matches/widgets/command_helper.dart';
 
 class MatchScreen extends ConsumerStatefulWidget {
   final String matchId;
@@ -89,11 +92,16 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
   }
 
   void _endMatch() {
+    final colors = Theme.of(context).colorScheme;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('End Match'),
-        content: const Text('Are you sure you want to end this match?'),
+        title: Text('End Match', style: TextStyle(color: colors.onSurface)),
+        content: Text(
+          'Are you sure you want to end this match?',
+          style: TextStyle(color: colors.onSurface),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -104,16 +112,21 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
               ref.read(matchesProvider.notifier).endMatch(widget.matchId);
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Match ended'),
+                SnackBar(
+                  backgroundColor: colors.primary,
+                  content: Text(
+                    'Match ended',
+                    style: TextStyle(
+                      color: colors.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   duration: Duration(seconds: 1),
                 ),
               );
               context.pop();
             },
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: colors.error),
             child: const Text('End Match'),
           ),
         ],
@@ -127,6 +140,84 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
 
   void _goBack() {
     context.pop();
+  }
+
+  Future<void> _exportStats() async {
+    final matches = ref.read(matchesProvider);
+    final stats = ref.read(matchStatsProvider);
+    final players = ref.read(playersProvider);
+    final teams = ref.read(teamsProvider);
+
+    final match = matches.firstWhere(
+      (m) => m.id == widget.matchId,
+      orElse: () => throw StateError('Match not found'),
+    );
+
+    // Show loading indicator
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Filter stats for this match
+      final matchStats = stats
+          .where((s) => s.matchId == widget.matchId)
+          .toList();
+
+      final filePath = await MatchExportService.exportMatchStatsToExcel(
+        match: match,
+        stats: matchStats,
+        players: players,
+        teams: teams,
+      );
+
+      if (!mounted) return;
+
+      Navigator.of(context).pop(); // Close loading dialog
+
+      if (filePath != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Stats exported successfully to: ${filePath.split('/').last}',
+            ),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'Open',
+              textColor: Colors.white,
+              onPressed: () {
+                // Optionally open the file
+              },
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Export cancelled or failed'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      Navigator.of(context).pop(); // Close loading dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error exporting stats: $e'),
+          duration: const Duration(seconds: 3),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -201,6 +292,21 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                   ),
                 ),
               ] else if (isFinished) ...[
+                // Export button for finished match
+                ElevatedButton.icon(
+                  onPressed: _exportStats,
+                  icon: const Icon(Icons.file_download),
+                  label: const Text('Export Stats'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    backgroundColor: colors.primaryContainer,
+                    foregroundColor: colors.onPrimaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 // Back button for finished match
                 ElevatedButton.icon(
                   onPressed: _goBack,
@@ -266,6 +372,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                       ),
                     ),
                     Expanded(child: MatchStatList(matchId: widget.matchId)),
+                    if (isActive) const CommandHelper(),
                   ],
                 ),
               ),
@@ -321,7 +428,7 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                           hintText:
                               'Enter command (e.g., "1 serve +" or "John dig +-")',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12.0),
                           ),
                           prefixIcon: const Icon(Icons.edit),
                           filled: true,
@@ -337,17 +444,25 @@ class _MatchScreenState extends ConsumerState<MatchScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: _submitCommand,
-                      icon: const Icon(Icons.send),
-                      label: const Text('Send'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: _submitCommand,
+                        icon: const Icon(Icons.send),
+                        label: const Text('Send'),
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(12.0),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          backgroundColor: colors.primaryContainer,
+                          foregroundColor: colors.onPrimaryContainer,
                         ),
-                        backgroundColor: colors.primaryContainer,
-                        foregroundColor: colors.onPrimaryContainer,
                       ),
                     ),
                   ],

@@ -25,7 +25,7 @@ class CommandParser {
 
     final playerIdentifier = parts[0];
     final action = parts[1].toLowerCase();
-    final result = parts.length > 2 ? parts[2] : '+';
+    final result = parts.length > 2 ? parts[2] : '';
 
     // Validate action against available commands (by name or shortcut)
     final matchingCommand = availableCommands.firstWhere(

@@ -56,8 +56,12 @@ class _MatchFormState extends ConsumerState<MatchForm> {
       setState(() {});
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Match created successfully'),
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            'Match created successfully',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           duration: Duration(seconds: 1),
         ),
       );

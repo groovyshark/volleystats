@@ -13,10 +13,10 @@ import 'features/matches/models/match.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
-  
+
   WindowOptions windowOptions = const WindowOptions(
     title: 'VolleyStats',
-    size: Size(1200, 800),
+    size: Size(1600, 1200),
     center: true,
     windowButtonVisibility: true,
   );
@@ -28,7 +28,7 @@ void main() async {
 
   // Initialize Hive
   await Hive.initFlutter();
-  
+
   // Register Hive adapters
   if (!Hive.isAdapterRegistered(0)) {
     Hive.registerAdapter(PlayerAdapter());
@@ -45,6 +45,6 @@ void main() async {
   if (!Hive.isAdapterRegistered(4)) {
     Hive.registerAdapter(MatchAdapter());
   }
-  
+
   runApp(const ProviderScope(child: MainApp()));
 }
